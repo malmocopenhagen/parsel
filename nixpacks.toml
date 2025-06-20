@@ -3,11 +3,13 @@ nixPkgs = [
   "tesseract",
   "tesseract-data-eng",
   "opencv",
-  "ffmpeg"
+  "ffmpeg",
+  "poppler_utils"
 ]
 
 [phases.install]
 cmds = [
+  "pip install --upgrade pip",
   "pip install -r requirements.txt"
 ]
 
