@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import pytesseract
-from paddleocr import PaddleOCR
 import easyocr
 import fitz  # PyMuPDF
 from pdf2image import convert_from_path
@@ -18,11 +17,10 @@ logger = logging.getLogger(__name__)
 class OCREngine:
     def __init__(self):
         """Initialize OCR engines with multiple backends for redundancy and accuracy."""
-        self.paddle_ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
         self.easy_ocr = easyocr.Reader(['en'])
         
         # Configure Tesseract
-        pytesseract.pytesseract.tesseract_cmd = '/usr/local/bin/tesseract'
+        pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
         
         # OCR confidence thresholds
         self.confidence_threshold = 0.7
@@ -51,13 +49,12 @@ class OCREngine:
             logger.info(f"Processing page {page_num + 1}")
             
             # Run multiple OCR engines
-            paddle_results = self._run_paddle_ocr(image)
             easy_results = self._run_easy_ocr(image)
             tesseract_results = self._run_tesseract(image)
             
             # Combine and validate results
             combined_results = self._combine_ocr_results(
-                paddle_results, easy_results, tesseract_results, page_num
+                easy_results, tesseract_results, page_num
             )
             
             # Post-process and clean text
@@ -97,29 +94,6 @@ class OCREngine:
             except Exception as e2:
                 logger.error(f"PDF conversion failed: {e2}")
                 raise
-    
-    def _run_paddle_ocr(self, image: np.ndarray) -> List[Dict]:
-        """Run PaddleOCR on image."""
-        try:
-            results = self.paddle_ocr.ocr(image, cls=True)
-            processed_results = []
-            
-            if results and results[0]:
-                for line in results[0]:
-                    if line and len(line) >= 2:
-                        bbox, (text, confidence) = line
-                        if confidence >= self.confidence_threshold and len(text.strip()) >= self.min_text_length:
-                            processed_results.append({
-                                'text': text.strip(),
-                                'confidence': confidence,
-                                'bbox': bbox,
-                                'engine': 'paddle'
-                            })
-            
-            return processed_results
-        except Exception as e:
-            logger.error(f"PaddleOCR error: {e}")
-            return []
     
     def _run_easy_ocr(self, image: np.ndarray) -> List[Dict]:
         """Run EasyOCR on image."""
@@ -178,10 +152,10 @@ class OCREngine:
             logger.error(f"Tesseract error: {e}")
             return []
     
-    def _combine_ocr_results(self, paddle_results: List[Dict], easy_results: List[Dict], 
+    def _combine_ocr_results(self, easy_results: List[Dict], 
                            tesseract_results: List[Dict], page_num: int) -> List[Dict]:
         """Combine results from multiple OCR engines with voting mechanism."""
-        all_results = paddle_results + easy_results + tesseract_results
+        all_results = easy_results + tesseract_results
         
         # Group results by spatial proximity
         grouped_results = self._group_by_proximity(all_results)
@@ -380,13 +354,12 @@ class OCREngine:
                 image = cv2.imread(filepath)
             
             # Run OCR on the page
-            paddle_results = self._run_paddle_ocr(image)
             easy_results = self._run_easy_ocr(image)
             tesseract_results = self._run_tesseract(image)
             
             # Combine results
             combined_results = self._combine_ocr_results(
-                paddle_results, easy_results, tesseract_results, page_number - 1
+                easy_results, tesseract_results, page_number - 1
             )
             
             # Post-process
