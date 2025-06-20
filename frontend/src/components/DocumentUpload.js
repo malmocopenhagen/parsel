@@ -9,6 +9,9 @@ import axios from 'axios';
 
 import { useAppContext } from '../context/AppContext';
 
+// API base URL - will use Railway URL in production
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
@@ -198,7 +201,7 @@ const DocumentUpload = () => {
       const formData = new FormData();
       formData.append('file', uploadedFile);
 
-      const uploadResponse = await axios.post('/upload', formData, {
+      const uploadResponse = await axios.post(`${API_BASE_URL}/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -209,7 +212,7 @@ const DocumentUpload = () => {
         navigate('/processing');
 
         // Start extraction
-        const extractionResponse = await axios.post('/extract', {
+        const extractionResponse = await axios.post(`${API_BASE_URL}/extract`, {
           filepath: uploadResponse.data.filepath,
           options: {
             enable_preview: true,
