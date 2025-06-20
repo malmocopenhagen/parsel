@@ -4,7 +4,7 @@ FROM python:3.9-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies with correct package names
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-eng \
@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgomp1 \
-    libgthread-2.0-0 \
     libfontconfig1 \
     libgtk-3-0 \
     libavcodec-dev \
@@ -46,6 +45,7 @@ RUN mkdir -p backend/uploads backend/outputs
 ENV PYTHONPATH=/app
 ENV FLASK_APP=backend/app.py
 ENV FLASK_ENV=production
+ENV PORT=5000
 
 # Expose port
 EXPOSE 5000

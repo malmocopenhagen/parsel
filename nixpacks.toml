@@ -1,0 +1,20 @@
+[phases.setup]
+nixPkgs = [
+  "tesseract",
+  "tesseract-data-eng",
+  "opencv",
+  "ffmpeg"
+]
+
+[phases.install]
+cmds = [
+  "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+  "mkdir -p backend/uploads backend/outputs"
+]
+
+[start]
+cmd = "cd backend && python app.py" 
